@@ -1,2 +1,46 @@
 # Knowledge-Graph
 WordPress plugin to add Knowledge Graph meta data in LD-JSON format to &lt;head />
+
+https://developers.google.com/structured-data/customize/overview
+
+#Aim 
+have form to create as hand coded this example:
+```
+<script type="application/ld+json">
+{"@context": "http://schema.org",
+    "@type": "RealEstateAgent",
+     "name": "Real Estate Intelligence Agency",
+    "logo": "http://www.realestate-huntsville.com/wp-content/uploads/2012/12/real-estate-intelligence-agency-logo.png",
+"description": " A real estate brokerage specializing in back-to-basics residential and commercial real estate sales and marketing services.",
+    "address": {
+     "streetAddress": "107 Clinton Ave W",
+   "addressLocality": "Huntsville",
+     "addressRegion": "AL",
+        "postalCode": "35801",
+    "addressCountry": "USA"
+    },
+    "telephone": "+1-256-457-0804",
+      "contactPoint" : [
+      { "@type" : "ContactPoint",
+      "telephone": "+1-256-682-0383",
+      "contactType" : "Sales and Marketing",
+      "areaServed" : "US",
+       "availableLanguage" : ["English", "Finnish"]
+       }
+       ],
+      "url": "http://www.RealEstate-Huntsville.com",
+  "sameAs" : ["https://www.facebook.com/RealEstateIntelligenceAgencyInc",
+              "http://twitter.com/REIA007",
+              "https://plus.google.com/115551206707821669279",
+              "https://www.youtube.com/channel/UCJ_pqfxGw6hhSMuJxIPQHZg",
+              "https://www.linkedin.com/company/real-estate-intelligence-agency"
+              ]
+}
+</script>	
+```
+# ToDo
+- [ ] Company name
+- [ ] Logo
+- [ ] Social Links et al. (sameAs)
+- [ ] Contact info
+- [ ] Lint/Validate
