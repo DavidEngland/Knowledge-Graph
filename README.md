@@ -41,6 +41,9 @@ have form to create as hand coded this example:
 # ToDo
 - [ ] Company name
 - [ ] Logo
+- [ ] URL
+- [ ] Description
 - [ ] Social Links et al. (sameAs)
 - [ ] Contact info
 - [ ] Lint/Validate
+- [ ] Search
