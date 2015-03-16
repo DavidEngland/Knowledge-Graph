@@ -4,6 +4,7 @@
 A simple PHP class for playing with Microdata (http://schema.org) by Leonard Challis (http://blog.leonardchallis.com/programming/a-php-class-to-play-with-microdata)
 Do with this what you will. I'd be interested in seeing what you have done with it, let me know!
 I'd appreciate you leaving this comment here and the link to the original blog-post.
+https://github.com/LeonardChallis/Microdata
 */
 
 class Microdata
