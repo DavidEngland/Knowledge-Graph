@@ -1,0 +1,24 @@
+[submodule "plugin-name/admin/includes/CMB2"]
+	path = plugin-name/admin/includes/CMB2
+	url = git@github.com:WebDevStudios/CMB2.git
+[submodule "plugin-name/includes/CPT_Core"]
+	path = plugin-name/includes/CPT_Core
+	url = git@github.com:WebDevStudios/CPT_Core.git
+[submodule "plugin-name/includes/Taxonomy_Core"]
+	path = plugin-name/includes/Taxonomy_Core
+	url = git@github.com:WebDevStudios/Taxonomy_Core.git
+[submodule "plugin-name/includes/Widget-Boilerplate"]
+	path = plugin-name/includes/Widget-Boilerplate
+	url = git@github.com:Mte90/WordPress-Widget-Boilerplate.git
+[submodule "plugin-name/admin/includes/WP-Admin-Notice"]
+	path = plugin-name/admin/includes/WP-Admin-Notice
+	url = git@github.com:nathanielks/wordpress-admin-notice.git
+[submodule "plugin-name/admin/includes/WP-Contextual-Help"]
+	path = plugin-name/admin/includes/WP-Contextual-Help
+	url = git@github.com:voceconnect/wp-contextual-help.git
+[submodule "plugin-name/admin/includes/PointerPlus"]
+	path = plugin-name/admin/includes/PointerPlus
+	url = git@github.com:Mte90/pointerplus.git
+[submodule "plugin-name/admin/includes/CMB2-Shortcode"]
+	path = plugin-name/admin/includes/CMB2-Shortcode
+	url = git@github.com:jtsternberg/Shortcode_Button.git

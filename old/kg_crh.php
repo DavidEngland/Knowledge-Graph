@@ -24,7 +24,22 @@ $addr = array(
     "addressCountry" => "USA"
 );
 
-
+/**
+      "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": "40.75",
+    "longitude": "73.98"
+  }
+*/
+    $latlong = array (
+       "latitude" => "34.425902",
+	  "longitude" => "-86.559893"  
+    );
+   
+    $GeoCoordinates = array($latlong);
+   
+    $geo = array("@type" => $GeoCoordinates);
+  
 $hours = array (
     "Su 13:00-17:00",
     "Mo-Sa 11:00-17:00"
