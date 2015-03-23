@@ -10,7 +10,7 @@ License: GPL v2
 Usage: Visit the plugin\'s settings page to configure your options.
 Tags: knowledge, graph, head, wp_head, jsonld, ldjson, schema, microdata
 */
-
+//Define some standard constants.
 if (!defined('MYPLUGIN_THEME_DIR'))
     define('MYPLUGIN_THEME_DIR', ABSPATH . 'wp-content/themes/' . get_template());
 
@@ -31,6 +31,7 @@ if (!defined('MYPLUGIN_VERSION_NUM'))
 
 add_option(MYPLUGIN_VERSION_KEY, MYPLUGIN_VERSION_NUM);
 
+    //Add settings link on plugin page
 add_filter('plugin_action_links', 'myplugin_plugin_action_links', 10, 2);
 
 function myplugin_plugin_action_links($links, $file) {
@@ -41,9 +42,6 @@ function myplugin_plugin_action_links($links, $file) {
     }
 
     if ($file == $this_plugin) {
-        // The "page" query string value must be equal to the slug
-        // of the Settings admin page we defined earlier, which in
-        // this case equals "myplugin-settings".
         $settings_link = '<a href="' . get_bloginfo('wpurl') . '/wp-admin/options-general.php?page=options-general.php_knowledge_graph">Settings</a>';
         array_unshift($links, $settings_link);
     }
@@ -51,9 +49,22 @@ function myplugin_plugin_action_links($links, $file) {
     return $links;
 }
 
-$country_names = json_decode(
-    file_get_contents(MYPLUGIN_PLUGIN_DIR."/lib/names.json")
-, true);
+$contact_types = array("sales", "customer support", "reservations", "credit card support", "emergency", "customer service", "technical support", "billing support", "bill payment", "baggage tracking", "roadside assistance", "package tracking");
+
+foreach ( $contact_types as $contact_type ) {
+    $contact_slug[] = str_replace( ' ', '-', $contact_type);
+    $type_contact[$contact_type] = ucwords($contact_type);
+}
+
+
+//Read in Country names indexed by two letter codes (ISO-3166), from http://country.io
+$country_names = json_decode( file_get_contents( MYPLUGIN_PLUGIN_DIR."/lib/names.json" ), true);
+
+//Read in Country two letter to three letter mappings
+$country_2to3 = json_decode( file_get_contents( MYPLUGIN_PLUGIN_DIR."/lib/iso3.json" ), true);
+
+//Same for days of the week
+$days = json_decode( file_get_contents( MYPLUGIN_PLUGIN_DIR."/lib/days.json" ), true);
 
 //include the main class file
 require_once( "admin-page-class/admin-page-class.php" );
@@ -88,6 +99,7 @@ $options_panel->TabsListing( array(
 	'options_2' => __( 'Branding', 'apc' ),
 	'options_3' => __( 'Links', 'apc' ),
 	'options_4' => __( 'Contact', 'apc' ),
+  'options_4a'=> __( 'Hours', 'apc' ),
 	'options_5' => __( 'Search', 'apc' ),
 	'options_6' => __( 'Install', 'apc' ),
 	'options_7' => __( 'Import Export', 'apc' ) 
@@ -162,13 +174,14 @@ $options_panel->addText( 'kg_postalCode_field_id', array(
     )
 ) );
 
-$options_panel->addText( 'kg_addressCountry_field_id', array(
-  'name' => __( 'Country', 'apc' ),
-  'std' => 'USA',
-    'validate' => array(
-        'alphanumeric' => array( 'param' => '', 'message' => __("Must be alpha numberic!", "apc"))
-    )
-) );
+$options_panel->addSelect(
+    'kg_addressCountry_selected',
+    $country_names,
+    array( 'name' => __('Country', 'apc'),
+          'std' => array('UNITED STATES'),
+          'desc' => __('Choose your Country', 'apc')
+         )
+);
 
 $options_panel->addTextarea( 'kg_company_desc_field_id', array(
   'name' => __( 'Description', 'apc' ),
@@ -263,8 +276,11 @@ $options_panel->addText(
     'kg_main_phone',
     array (
         'name' => __('Main Telephone Number', 'apc'),
-        'std'  => '+1-800-555-555',
-        'desc' => __('Company main phone number', 'apc' )
+        'std'  => '+1(800) 555-5555',
+        'desc' => __('Company main phone number', 'apc' ),
+        'validate' => array(
+            'phone' => array( 'param' => '', 'message' => __("Telephone Number does not validate!", "apc"))
+    )
     )
 );
 
@@ -277,21 +293,122 @@ $options_panel->addCheckbox(
     )
 );
 
+    $phone_options[] = $options_panel->addText(
+     'phoneNumber',
+        array(
+            'name' => __( 'Phone Number', 'apc'),
+            'validate' => array(
+                  'phone' => array( 'param' => '', 'message' => __("Telephone Number does not validate!", "apc"))
+            )
+        ),true
+    );
+    
+    $phone_options[] = $options_panel->addSelect(
+        'phoneType',
+         $type_contact,
+        array(
+            'name' => __( "Choose Type", "apc" )
+        ),
+        true
+    );
+                                
+    $phone_options[] = $options_panel->addCheckbox(                      
+       'tollFree',
+        array(
+            'name' => __( 'Toll Free?', 'apc' ),
+            'std' => true
+        ),true
+    );
+    
+   $phone_options[] = $options_panel->addCheckbox(                      
+      'hearing',
+        array(
+            'name' => __( 'Hearing Impaired?', 'apc' ),
+            'std' => false
+        ),true
+    ); 
+
+    $phone_options[] = $options_panel->addText(
+        'lang',
+        array(
+            'name' => __( "Languages, comma seperated", 'apc'),
+            'std' => "English, Spanish, German, French"
+        ),
+        true
+    );
+    
+    $options_panel->addRepeaterBlock('ContactPoints',array('inline'=>true,'name'=>__("Contact Point",'apc'),'fields'=>$phone_options),true);       
+
 /**
 * Close 4th tab
 */
 $options_panel->CloseTab();
+
+/**
+* Open admin page
+*/
+$options_panel->OpenTab( 'options_4a' );
+
+//title
+$options_panel->Title( __( 'Opening Hours', 'apc' ) );
+
+$Conditinal_fields[] = $options_panel->addTime('mondayOpen',array('name'=>__("Hours open Monday","apc"),'std'=>'08:00'),true);
+$Conditinal_fields[] = $options_panel->addTime('mondayClose',array('name'=>__("Hours close Monday","apc"),'std'=>'17:00'),true);
+
+
+$Conditinal_fields[] = $options_panel->addTime('tuesdayOpen',array('name'=>__("Hours open Tuesday","apc"),'std'=>'08:00'),true);
+$Conditinal_fields[] = $options_panel->addTime('tuesdayClose',array('name'=>__("Hours close Tuesday","apc"),'std'=>'17:00'),true);
+
+
+$Conditinal_fields[] = $options_panel->addTime('wednesdayOpen',array('name'=>__("Hours open Wednesday","apc"),'std'=>'08:00'),true);
+$Conditinal_fields[] = $options_panel->addTime('wednesdayClose',array('name'=>__("Hours close Wednesday","apc"),'std'=>'17:00'),true);
+
+
+$Conditinal_fields[] = $options_panel->addTime('thursdayOpen',array('name'=>__("Hours open Thursday","apc"),'std'=>'08:00'),true);
+$Conditinal_fields[] = $options_panel->addTime('thursdayClose',array('name'=>__("Hours close Thursday","apc"),'std'=>'17:00'),true);
+
+
+$Conditinal_fields[] = $options_panel->addTime('fridayOpen',array('name'=>__("Hours open Friday","apc"),'std'=>'08:00'),true);
+$Conditinal_fields[] = $options_panel->addTime('fridayClose',array('name'=>__("Hours close Friday","apc"),'std'=>'17:00'),true);
+
+
+$Conditinal_fields[] = $options_panel->addTime('saturdayOpen',array('name'=>__("Hours open Saturday","apc"),'std'=>'09:00'),true);
+$Conditinal_fields[] = $options_panel->addTime('saturdayClose',array('name'=>__("Hours close Saturday","apc"),'std'=>'17:00'),true);
+
+
+$Conditinal_fields[] = $options_panel->addTime('sundayOpen',array('name'=>__("Hours open Sunday","apc")),true);
+$Conditinal_fields[] = $options_panel->addTime('sundayClose',array('name'=>__("Hours close Sunday","apc")),true);
+
+  /**
+   * Then just add the fields to the repeater block
+   */
+  //conditinal block 
+  $options_panel->addCondition('conditinal_fields',
+      array(
+        'name'   => __('Enable Times open? ','apc'),
+        'desc'   => __('<small>Turn ON if you want to enable the <strong>Hours open for each day of the week</strong>.</small>','apc'),
+        'fields' => $Conditinal_fields,
+        'std'    => false
+      ));
+
+/**
+* Close tab
+*/
+$options_panel->CloseTab();
+
+
 /**
 * Open admin page 5th tab
 */
 $options_panel->OpenTab( 'options_5' );
 $options_panel->Title(__( "Sitelinks Search Box", "apc" ));
-
-$options_panel->addTextarea(
-    'kg_search_field_id',
+// $options_panel->addCode('code_field_id',array('name'=> __('Code Editor ','apc'),'syntax' => 'php', 'desc' => __('code editor field description','apc')));
+$options_panel->addCode(
+    'search_field',
     array(
         'name' => 'Company Custom Search',
-        'std'  => 'https://example.com/search?q={search_term_string}',
+        'syntax' => 'php',
+        'std'  => 'https://example.com/?s={search_term_string}',
         'desc' => 'See <a href="https://developers.google.com/structured-data/slsb-overview" target="_blank">https://developers.google.com/structured-data/slsb-overview</a> for additional information.'
     )
 );
@@ -301,18 +418,76 @@ $options_panel->addTextarea(
 */
 $options_panel->CloseTab();
 
-
 //Search
 $options_panel->OpenTab( 'options_6' );
 
-$options_panel->addSelect(
-    'kg_addressCountry_selected',
-    $country_names,
-    array( 'name' => __('Country', 'apc'),
-          'std' => array('UNITED STATES'),
-          'desc' => __('Choose your Country', 'apc')
-         )
+$data = get_option('kg_options');
+
+$addr = array( 
+             "@type" => "PostalAddress",
+     "streetAddress" => $data['kg_streetAddress_field_id'],
+   "addressLocality" => $data['kg_addressLocality_field_id'],
+     "addressRegion" => $data['kg_addressRegion_field_id'],
+        "postalCode" => $data['kg_postalCode_field_id'],
+    "addressCountry" => $country_2to3[$data['kg_addressCountry_selected']]
 );
+
+$hours = array();
+foreach ( array("Mo","Tu","We","Th","Fr","Sa","Su") as $day ) {
+    $day_long = $days[$day];
+    $id_1 = strtolower($day_long) . 'Open';
+    $id_2 = strtolower($day_long) . 'Close';
+    $opening_time = $data['conditinal_fields'][$id_1];
+    $closing_time = $data['conditinal_fields'][$id_2];   
+    if ( is_null($opening_time) && is_null($closing_time) )
+       $get_hours = NULL;
+    else
+       $get_hours = "$day $opening_time-$closing_time";
+    
+    if ( !is_null($get_hours) )
+      $hours[] = $get_hours;
+}
+
+$links = array();
+
+$lang = array ("English","Finnish");
+
+$contact = array(
+            "@type" => "ContactPoint",
+        "telephone" => "+1-256-682-0383",
+      "contactType" => "Sales and Marketing",
+       "areaServed" => "US",
+"availableLanguage" => $lang
+);
+
+$data2 = array(
+     "@context" => "http://schema.org",
+        "@type" => "LocalBusiness",
+         'name' => $data['kg_company_name_field_id'],
+         'logo' => $data['kg_logo_field_id']['src'],
+  "description" => $data['kg_company_desc_field_id'], 
+      "address" => $addr,
+ "openingHours" => $hours,
+          "url" => $data['kg_url_field_id']   
+);
+
+//header('Content-type: application/ld+json');
+    
+    $str = '<script type="application/ld+json">'.PHP_EOL;
+
+    //$str .= json_encode( $data2, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ).PHP_EOL;
+    $str .= json_encode( $data2 );
+    
+    $str .= '</script>' . PHP_EOL;
+$options_panel->addParagraph('<pre>'.$str.'</pre>');
+$options_panel->addCode(
+    'kg_the_script',
+    array(
+        'std' => $str,
+        'syntax'=>'javascript'
+    )
+);
+
 /**
 * Close 6th tab
 */
@@ -330,11 +505,6 @@ $options_panel->Title( __( "Import Export", "apc" ) );
 * add import export functionallty
 */
 $options_panel->addImportExport();
-
-$data = get_option('kg_options');
-
-$options_panel->addParagraph(__($data['kg_company_name_field_id'],"apc"));
-$options_panel->addParagraph(__($data['kg_addressCountry_selected'],"apc"));
 
 /**
 * Close 7th tab

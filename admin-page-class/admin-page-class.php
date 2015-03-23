@@ -3628,6 +3628,19 @@ if ( ! class_exists( 'BF_Admin_Page_Class') ) :
   public function is_street($val){
     return (bool)preg_match("/^[0-9]+\s+([a-zA-Z]+|[a-zA-Z]+\s[a-zA-Z]+)$/i", $val);
   }
+
+  /**
+   * Matches phone number
+   * @access public
+   * @author David England <davideengland@gmail.com>
+   * @since 1.3.0
+   * @param   string
+   * @return  boolean
+   */
+  public function is_phone($val){
+    return (bool)preg_match("/^[+#*\(\)\[\]]*([0-9][ ext+-pw#*\(\)\[\]]*){6,45}$/i", $val);
+  }
+
 } // End Class
 
 endif; // End Check Class Exists
