@@ -66,8 +66,11 @@ $country_2to3 = json_decode( file_get_contents( MYPLUGIN_PLUGIN_DIR."/lib/iso3.j
 //Same for days of the week
 $days = json_decode( file_get_contents( MYPLUGIN_PLUGIN_DIR."/lib/days.json" ), true);
 
+//JSON Pretty Print, because some old version of PHP don't have.
+require_once( MYPLUGIN_PLUGIN_DIR."/lib/json_format.php" );
+
 //include the main class file
-require_once( "admin-page-class/admin-page-class.php" );
+require_once( MYPLUGIN_PLUGIN_DIR."/admin-page-class/admin-page-class.php" );
 
 
 /**
@@ -122,16 +125,37 @@ $options_panel->Title( __( "Basic Information", "apc" ) );
 //An optionl descrption paragraph
 $options_panel->addParagraph( __( "Company Name and address.", "apc" ) );
 
+$options_panel->addSelect(
+    '@context',
+    array("http://schema.org"=>"MicroData"),
+    array('desc'=>__("Only one type supported currently", "apc")
+         )
+);
 
-$options_panel->addText( 'kg_company_name_field_id', array(
+$options_panel->addSelect(
+    '@type',
+    array(
+        "Organization"=>"Organization",
+        "LocalBusiness"=>"Local Business",
+        "AnimalShelter"=>"Animal Shelter",
+        "AutomotiveBusiness"=>"Automotive Business",
+        "ChildCare"=>"Child Care",
+        "RealEstateAgent"=>"Real Estate Agent"
+    ),
+    array(
+        'desc'=>__("Choose the best category @type", "apc"),
+        'std' =>__("Organization","apc")
+         )
+);
+
+$options_panel->addText( 'name', array(
   'name' => __( 'Company Name', 'apc' ),
   'std' => get_bloginfo( 'name' ),
-  'desc' => __( 'Legal Company name', 'apc' ) 
-) 
-					   );
+  'desc' => __( 'Legal Company name', 'apc' ) ) 
+);
 
 //email with validation
-$options_panel->addText('kg_email_field_id',
+$options_panel->addText('email',
 						array(
 						  'name'     => __(' Main Email ','apc'),
 						  'std'      => get_bloginfo( 'admin-email' ),
@@ -142,7 +166,7 @@ $options_panel->addText('kg_email_field_id',
 						)
 					   );
 
-$options_panel->addText( 'kg_streetAddress_field_id', array(
+$options_panel->addText( 'streetAddress', array(
   'name' => __( 'Street', 'apc' ),
   'std' => '103 Elm',
         'validate' => array(
@@ -150,7 +174,7 @@ $options_panel->addText( 'kg_streetAddress_field_id', array(
     )
 ) );
 
-$options_panel->addText( 'kg_addressLocality_field_id', array(
+$options_panel->addText( 'addressLocality', array(
   'name' => __( 'City', 'apc' ),
   'std' => 'City',
     'validate' => array(
@@ -158,7 +182,7 @@ $options_panel->addText( 'kg_addressLocality_field_id', array(
     )
 ) );
 
-$options_panel->addText( 'kg_addressRegion_field_id', array(
+$options_panel->addText( 'addressRegion', array(
   'name' => __( 'State', 'apc' ),
   'std' => 'AL',
     'validate' => array(
@@ -166,16 +190,16 @@ $options_panel->addText( 'kg_addressRegion_field_id', array(
     )
 ) );
 
-$options_panel->addText( 'kg_postalCode_field_id', array(
+$options_panel->addText( 'postalCode', array(
   'name' => __( 'Postal Zip Code', 'apc' ),
-  'std' => '12345',
+  'std' => '35633',
     'validate' => array(
         'alphanumeric' => array( 'param' => '', 'message' => __("Must be alpha numberic!", "apc"))
     )
 ) );
 
 $options_panel->addSelect(
-    'kg_addressCountry_selected',
+    'addressCountry',
     $country_names,
     array( 'name' => __('Country', 'apc'),
           'std' => array('UNITED STATES'),
@@ -183,7 +207,7 @@ $options_panel->addSelect(
          )
 );
 
-$options_panel->addTextarea( 'kg_company_desc_field_id', array(
+$options_panel->addTextarea( 'description', array(
   'name' => __( 'Description', 'apc' ),
   'std' => get_bloginfo( 'description' ),
   'desc' => __( 'Brief description of what company is.', 'apc' ) 
@@ -205,11 +229,11 @@ $options_panel->Title( __( 'Logo', 'apc' ) );
 //Typography field
 
 //Image field
-$options_panel->addImage( 'kg_logo_field_id', array(
+$options_panel->addImage( 'logo', array(
   'name' => __( 'Company Logo ', 'apc' ),
   'preview_height' => '150px',
   'preview_width' => '150px',
-  'desc' => __( 'Company logo image', 'apc' ) 
+  'desc' => __( 'Company logo image<br/><small>Image preview may appear distorted, but, the image itself should NOT be.</small>', 'apc' ) 
 ) );
 
 /**
@@ -231,7 +255,7 @@ $options_panel->OpenTab( 'options_3' );
 $options_panel->Title( __( "URL and Social sites", "apc" ) );
 
   $options_panel->addText(
-      'kg_url_field_id',
+      'url',
        array(
            'name'     => __(' Website ','apc'),
            'std'      => get_bloginfo( 'wpurl' ),
@@ -243,7 +267,7 @@ $options_panel->Title( __( "URL and Social sites", "apc" ) );
 );
 
 $repeater_fields[] = $options_panel->addText(
-    're_links_field_id',
+    're_links',
     array(
       'name'  => __('Enter a URL ','apc'),
         'std' => 'http://',
@@ -251,7 +275,7 @@ $repeater_fields[] = $options_panel->addText(
     ),true);
 
  $options_panel->addRepeaterBlock(
-     're_',
+     'sameAs',
      array(
          'name'   => __('Other Company profile links','apc'),
          'fields' => $repeater_fields,
@@ -273,7 +297,7 @@ $options_panel->OpenTab( 'options_4' );
 $options_panel->Title( __( "Contact", "apc" ) );
 
 $options_panel->addText( 
-    'kg_main_phone',
+    'telephone',
     array (
         'name' => __('Main Telephone Number', 'apc'),
         'std'  => '+1(800) 555-5555',
@@ -285,7 +309,7 @@ $options_panel->addText(
 );
 
 $options_panel->addCheckbox(
-    'kg_main_phone_show',
+    'telephone_show',
     array(
         'name' => __('Show main phone?', 'apc' ),
         'std' => true,
@@ -294,7 +318,7 @@ $options_panel->addCheckbox(
 );
 
     $phone_options[] = $options_panel->addText(
-     'phoneNumber',
+     'telephone',
         array(
             'name' => __( 'Phone Number', 'apc'),
             'validate' => array(
@@ -313,7 +337,7 @@ $options_panel->addCheckbox(
     );
                                 
     $phone_options[] = $options_panel->addCheckbox(                      
-       'tollFree',
+       'TollFree',
         array(
             'name' => __( 'Toll Free?', 'apc' ),
             'std' => true
@@ -321,7 +345,7 @@ $options_panel->addCheckbox(
     );
     
    $phone_options[] = $options_panel->addCheckbox(                      
-      'hearing',
+      'HearingImpairedSupported',
         array(
             'name' => __( 'Hearing Impaired?', 'apc' ),
             'std' => false
@@ -329,7 +353,7 @@ $options_panel->addCheckbox(
     ); 
 
     $phone_options[] = $options_panel->addText(
-        'lang',
+        'availableLanguage',
         array(
             'name' => __( "Languages, comma seperated", 'apc'),
             'std' => "English, Spanish, German, French"
@@ -383,7 +407,7 @@ $Conditinal_fields[] = $options_panel->addTime('sundayClose',array('name'=>__("H
    * Then just add the fields to the repeater block
    */
   //conditinal block 
-  $options_panel->addCondition('conditinal_fields',
+  $options_panel->addCondition('openingHours',
       array(
         'name'   => __('Enable Times open? ','apc'),
         'desc'   => __('<small>Turn ON if you want to enable the <strong>Hours open for each day of the week</strong>.</small>','apc'),
@@ -402,9 +426,9 @@ $options_panel->CloseTab();
 */
 $options_panel->OpenTab( 'options_5' );
 $options_panel->Title(__( "Sitelinks Search Box", "apc" ));
-// $options_panel->addCode('code_field_id',array('name'=> __('Code Editor ','apc'),'syntax' => 'php', 'desc' => __('code editor field description','apc')));
+// $options_panel->addCode('code',array('name'=> __('Code Editor ','apc'),'syntax' => 'php', 'desc' => __('code editor field description','apc')));
 $options_panel->addCode(
-    'search_field',
+    'target',
     array(
         'name' => 'Company Custom Search',
         'syntax' => 'php',
@@ -425,11 +449,11 @@ $data = get_option('kg_options');
 
 $addr = array( 
              "@type" => "PostalAddress",
-     "streetAddress" => $data['kg_streetAddress_field_id'],
-   "addressLocality" => $data['kg_addressLocality_field_id'],
-     "addressRegion" => $data['kg_addressRegion_field_id'],
-        "postalCode" => $data['kg_postalCode_field_id'],
-    "addressCountry" => $country_2to3[$data['kg_addressCountry_selected']]
+     "streetAddress" => $data['streetAddress'],
+   "addressLocality" => $data['addressLocality'],
+     "addressRegion" => $data['addressRegion'],
+        "postalCode" => $data['postalCode'],
+    "addressCountry" => $country_2to3[$data['addressCountry']]
 );
 
 $hours = array();
@@ -437,8 +461,8 @@ foreach ( array("Mo","Tu","We","Th","Fr","Sa","Su") as $day ) {
     $day_long = $days[$day];
     $id_1 = strtolower($day_long) . 'Open';
     $id_2 = strtolower($day_long) . 'Close';
-    $opening_time = $data['conditinal_fields'][$id_1];
-    $closing_time = $data['conditinal_fields'][$id_2];   
+    $opening_time = $data['openingHours'][$id_1];
+    $closing_time = $data['openingHours'][$id_2];   
     if ( is_null($opening_time) && is_null($closing_time) )
        $get_hours = NULL;
     else
@@ -447,8 +471,6 @@ foreach ( array("Mo","Tu","We","Th","Fr","Sa","Su") as $day ) {
     if ( !is_null($get_hours) )
       $hours[] = $get_hours;
 }
-
-$links = array();
 
 $lang = array ("English","Finnish");
 
@@ -463,14 +485,21 @@ $contact = array(
 $data2 = array(
      "@context" => "http://schema.org",
         "@type" => "LocalBusiness",
-         'name' => $data['kg_company_name_field_id'],
-         'logo' => $data['kg_logo_field_id']['src'],
-  "description" => $data['kg_company_desc_field_id'], 
+         'name' => $data['name'],
+         'logo' => $data['logo']['src'],
+  "description" => $data['description'], 
       "address" => $addr,
- "openingHours" => $hours,
-          "url" => $data['kg_url_field_id']   
+          "url" => $data['url']   
 );
+$links = array();
+$urls = $data["sameAs"];
+foreach( $urls as $url ) { 
+  $links[]= $url["re_links"];
+}
+$data2 = array_merge($data2,array("sameAs"=>$links));
 
+//if ( $data['openingHours']['enabled'] == 'on' )
+  $data2 = array_merge($data2,array( "openingHours" => $hours));
 //header('Content-type: application/ld+json');
     
     $str = '<script type="application/ld+json">'.PHP_EOL;
@@ -479,11 +508,11 @@ $data2 = array(
     $str .= json_encode( $data2 );
     
     $str .= '</script>' . PHP_EOL;
-$options_panel->addParagraph('<pre>'.$str.'</pre>');
+$options_panel->addParagraph('<pre>'.json_format(json_encode( $data2 )).'</pre>');
 $options_panel->addCode(
-    'kg_the_script',
+    'the_script',
     array(
-        'std' => $str,
+        'std' => json_format(json_encode( $data2 )),
         'syntax'=>'javascript'
     )
 );
