@@ -39,11 +39,12 @@ have form to create as hand coded this example:
 </script>	
 ```
 # ToDo
-- [ ] Company name
-- [ ] Logo
-- [ ] URL
-- [ ] Description
-- [ ] Social Links et al. (sameAs)
-- [ ] Contact info
+- [x] Company name
+- [x] Logo
+- [x] URL
+- [x] Description
+- [x] Social Links et al. (sameAs)
+- [x] Contact info
+- [ ] contactPoint(s)/ContactPoint
 - [ ] Lint/Validate
 - [ ] Search

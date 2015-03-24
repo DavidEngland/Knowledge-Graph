@@ -24,7 +24,7 @@ function json_format($json)
             case '[': 
                 if(!$in_string) 
                 { 
-                    $new_json .= $char . "\n" . str_repeat($tab, $indent_level+1); 
+                    $new_json .= $char . PHP_EOL . str_repeat($tab, $indent_level+1); 
                     $indent_level++; 
                 } 
                 else 
@@ -37,7 +37,7 @@ function json_format($json)
                 if(!$in_string) 
                 { 
                     $indent_level--; 
-                    $new_json .= "\n" . str_repeat($tab, $indent_level) . $char; 
+                    $new_json .= PHP_EOL . str_repeat($tab, $indent_level) . $char; 
                 } 
                 else 
                 { 
@@ -47,7 +47,7 @@ function json_format($json)
             case ',': 
                 if(!$in_string) 
                 { 
-                    $new_json .= ",\n" . str_repeat($tab, $indent_level); 
+                    $new_json .= "," . PHP_EOL . str_repeat($tab, $indent_level); 
                 } 
                 else 
                 { 
@@ -77,4 +77,3 @@ function json_format($json)
 
     return $new_json; 
 } 
-?>

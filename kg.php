@@ -137,10 +137,38 @@ $options_panel->addSelect(
     array(
         "Organization"=>"Organization",
         "LocalBusiness"=>"Local Business",
+        "Airline"=>"Airline",
+        "EducationalOrganization"=>"Educational Organization",
+        "GovernmentOrganization"=>"Government Organization",
+        "NGO"=>"Non-government Organization",
+        "PerformingGroup"=>"Performing Group",
         "AnimalShelter"=>"Animal Shelter",
         "AutomotiveBusiness"=>"Automotive Business",
         "ChildCare"=>"Child Care",
-        "RealEstateAgent"=>"Real Estate Agent"
+        "DryCleaningOrLaundry"=>"Dry Cleaning or Laundry",
+        "EmergencyService"=>"Emergency Service",
+        "EmploymentAgency"=>"Employment Agency",
+        "EntertainmentBusiness"=>"Entertainment Business",
+        "FinancialService"=>"Financial Service",
+        "FoodEstablishment"=>"Food Establishment",
+        "GovernmentOffice"=>"Government Office",
+        "HealthAndBeautyBusiness"=>"Health and Beauty Business",
+        "HomeAndConstructionBusiness"=>"Home and Construction Business",
+        "InternetCafe"=>"Internet Cafe",
+        "Library"=>"Library",
+        "LodgingBusiness"=>"Lodging Business",
+        "MedicalOrganization"=>"Medical Organization",
+        "ProfessionalService"=>"Professional Service",
+        "RadioStation"=>"Radio Station",
+        "RealEstateAgent"=>"Real Estate Agent",
+        "RecyclingCenter"=>"Recycling Center",
+        "SelfStorage"=>"Self Storage",
+        "ShoppingCenter"=>"Shopping Center",
+        "SportsActivityLocation"=>"Sports Activity Location",
+        "Store"=>"Store",
+        "TelevisionStation"=>"Television Station",
+        "TouristInformationCenter"=>"Tourist Information Center",
+        "TravelAgency"=>"Travel Agency"
     ),
     array(
         'desc'=>__("Choose the best category @type", "apc"),
@@ -267,7 +295,7 @@ $options_panel->Title( __( "URL and Social sites", "apc" ) );
 );
 
 $repeater_fields[] = $options_panel->addText(
-    're_links',
+    'li',
     array(
       'name'  => __('Enter a URL ','apc'),
         'std' => 'http://',
@@ -483,8 +511,8 @@ $contact = array(
 );
 
 $data2 = array(
-     "@context" => "http://schema.org",
-        "@type" => "LocalBusiness",
+     "@context" => $data['@context'],
+        "@type" => $data['@type'],
          'name' => $data['name'],
          'logo' => $data['logo']['src'],
   "description" => $data['description'], 
@@ -492,30 +520,70 @@ $data2 = array(
           "url" => $data['url']   
 );
 $links = array();
-$urls = $data["sameAs"];
-foreach( $urls as $url ) { 
-  $links[]= $url["re_links"];
+$alinks = $data["sameAs"];
+foreach( $alinks as $alink ) { 
+  $links[]= $alink["li"];
 }
 $data2 = array_merge($data2,array("sameAs"=>$links));
 
 //if ( $data['openingHours']['enabled'] == 'on' )
   $data2 = array_merge($data2,array( "openingHours" => $hours));
+
+$json_view_data[] = $options_panel->addParagraph('<pre><code>'.json_format(json_encode( $data )).'</code></pre>',true);
+$options_panel->addCondition(
+    'json_data',
+  array(
+    'name' => __('Show current data in JSON format?', 'apc'),
+    'desc' => __('<small>View current data in JSON format</small>', 'apc'),
+    'fields' => $json_view_data,
+    'std'  => false
+  )
+);
+
+$json_view_data2[] = $options_panel->addParagraph('<pre>'.json_format(json_encode( $data2 )).'</pre>',true);
+$options_panel->addCondition(
+    'json_data2',
+  array(
+    'name' => __('Show generated data in JSON format?', 'apc'),
+    'desc' => __('<small>Select, copy, paste below and edit</small>', 'apc'),
+    'fields' => $json_view_data2,
+    'std'  => false
+  )
+);
+
+$options_panel->addCode(
+    'the_script',
+    array(
+        'name' => __( 'This is what will be included in the HEAD section of this site!', 'apc' ),
+        'std' => json_format(json_encode( $data2 )),
+        'syntax'=>'javascript',
+        'desc'  => 'Test the above at <a href="https://developers.google.com/structured-data/testing-tool/" target="_blank">https://developers.google.com/structured-data/testing-tool/</a>'
+    )
+);
+/**
+ * Write the edited script ('the_script') to a file, that will then be read 
+ * back end and included in the <head/>.
+ *
+ */
+    $jsonFile = MYPLUGIN_PLUGIN_DIR."/knowledge-graph.json";
+    $fh = fopen($jsonFile, 'w');
 //header('Content-type: application/ld+json');
     
     $str = '<script type="application/ld+json">'.PHP_EOL;
 
     //$str .= json_encode( $data2, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ).PHP_EOL;
-    $str .= json_encode( $data2 );
-    
+    $str .= $data['the_script'];
     $str .= '</script>' . PHP_EOL;
-$options_panel->addParagraph('<pre>'.json_format(json_encode( $data2 )).'</pre>');
-$options_panel->addCode(
-    'the_script',
-    array(
-        'std' => json_format(json_encode( $data2 )),
-        'syntax'=>'javascript'
-    )
-);
+    fwrite($fh, $str);
+
+function kg_header() {
+    $jsonFile = MYPLUGIN_PLUGIN_DIR."/knowledge-graph.json";
+    $fh = fopen( "knowledge-graph.json", 'r' );
+    $json = fread($fh,filesize($jsonFile));
+    echo $json.PHP_EOL;
+}
+
+add_action('wp_head','kg_header');
 
 /**
 * Close 6th tab
@@ -540,21 +608,5 @@ $options_panel->addImportExport();
 */
 $options_panel->CloseTab();
 
-//Now Just for the fun I'll add Help tabs
-$options_panel->HelpTab( array(
-  'id' => 'tab_id',
-  'title' => __( 'My help tab title', 'apc' ),
-  'content' => '<p>' . __( 'This is my Help Tab content', 'apc' ) . '</p>' 
-) );
-$options_panel->HelpTab( array(
-  'id' => 'tab_id2',
-  'title' => __( 'My 2nd help tab title', 'apc' ),
-  'callback' => 'help_tab_callback_demo' 
-) );
-
-//help tab callback function
-function help_tab_callback_demo( ) {
-  echo '<p>' . __( 'This is my 2nd Help Tab content from a callback function', 'apc' ) . '</p>';
-}
 
 ?>
