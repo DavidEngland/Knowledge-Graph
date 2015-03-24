@@ -3,6 +3,8 @@ WordPress plugin to add Knowledge Graph meta data in LD-JSON format to &lt;head 
 
 https://developers.google.com/structured-data/customize/overview
 
+uses: [Admin Page Class] (https://github.com/bainternet/Admin-Page-Class)
+
 #Aim 
 have form to create as hand coded this example:
 ```
@@ -45,6 +47,8 @@ have form to create as hand coded this example:
 - [x] Description
 - [x] Social Links et al. (sameAs)
 - [x] Contact info
-- [ ] contactPoint(s)/ContactPoint
+- [x] contactPoint(s)/ContactPoint
 - [ ] Lint/Validate
 - [ ] Search
+- [ ] Modify admin-page-class to validate repeater block
+- [ ] Modify admin-page-class so that can delete repeater fields

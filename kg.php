@@ -389,7 +389,7 @@ $options_panel->addCheckbox(
     $phone_options[] = $options_panel->addText(
         'areaServed',
         array(
-            'name' => __( "Area Served, two letter country code, comma seperated", 'apc'),
+            'name' => __( "Area Served", 'apc'),
             'std' => "US, CA, MX"
         ),
         true
@@ -555,38 +555,6 @@ foreach( $alinks as $alink ) {
 $data2 = my_array_merge($data2, "sameAs", $links);
 
 //Points of Contact, e.g.,
-/**
-"contactPoint" : [
-    { "@type" : "ContactPoint",
-      "telephone" : "+1-877-746-0909",
-      "contactType" : "customer service",
-      "contactOption" : "TollFree",
-      "areaServed" : "US"
-    } , {
-      "@type" : "ContactPoint",
-      "telephone" : "+1-505-998-3793",
-      "contactType" : "customer service"
-    } , {
-      "@type" : "ContactPoint",
-      "telephone" : "+1-877-296-1018",
-      "contactType" : "customer service",
-      "contactOption" : ["HearingImpairedSupported","TollFree"] ,
-      "areaServed" : "US"
-    } , {
-      "@type" : "ContactPoint",
-      "telephone" : "+1-877-453-1304",
-      "contactType" : "technical support",
-      "contactOption" : "TollFree",
-      "areaServed" : ["US","CA"],
-      "availableLanguage" : ["English","French"]
-    } , {
-      "@type" : "ContactPoint",
-      "telephone" : "+1-877-453-1304",
-      "contactType" : "bill payment",
-      "contactOption" : "TollFree",
-      "areaServed" : ["US","CA"]
-    } ]
-*/
 $contact_points = $data['ContactPoints'];
 $contact_point = array();
 for ($i=0; $i<count($contact_points); $i++ ) {

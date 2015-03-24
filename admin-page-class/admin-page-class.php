@@ -3626,7 +3626,7 @@ if ( ! class_exists( 'BF_Admin_Page_Class') ) :
    * @return  boolean
    */
   public function is_street($val){
-    return (bool)preg_match("/^[0-9]+\s+([a-zA-Z]+|[a-zA-Z]+\s[a-zA-Z]+)$/i", $val);
+    return (bool)preg_match("/^\d+\s+([a-zA-Z. #]+)$/i", $val);
   }
 
   /**
