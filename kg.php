@@ -72,6 +72,12 @@ require_once( MYPLUGIN_PLUGIN_DIR."/lib/json_format.php" );
 //include the main class file
 require_once( MYPLUGIN_PLUGIN_DIR."/admin-page-class/admin-page-class.php" );
 
+function my_array_merge( $arry, $key, $value ) {
+    if ( !empty( $value ) ) {
+        return array_merge( $arry, array( $key => $value ) );
+    }
+    return $arry;
+}
 
 /**
 * admin page configuration
@@ -102,7 +108,7 @@ $options_panel->TabsListing( array(
 	'options_2' => __( 'Branding', 'apc' ),
 	'options_3' => __( 'Links', 'apc' ),
 	'options_4' => __( 'Contact', 'apc' ),
-  'options_4a'=> __( 'Hours', 'apc' ),
+   'options_4a' => __( 'Hours', 'apc' ),
 	'options_5' => __( 'Search', 'apc' ),
 	'options_6' => __( 'Install', 'apc' ),
 	'options_7' => __( 'Import Export', 'apc' ) 
@@ -282,7 +288,7 @@ $options_panel->OpenTab( 'options_3' );
 //title
 $options_panel->Title( __( "URL and Social sites", "apc" ) );
 
-  $options_panel->addText(
+$options_panel->addText(
       'url',
        array(
            'name'     => __(' Website ','apc'),
@@ -356,7 +362,7 @@ $options_panel->addCheckbox(
     );
     
     $phone_options[] = $options_panel->addSelect(
-        'phoneType',
+        'contactType',
          $type_contact,
         array(
             'name' => __( "Choose Type", "apc" )
@@ -379,6 +385,15 @@ $options_panel->addCheckbox(
             'std' => false
         ),true
     ); 
+
+    $phone_options[] = $options_panel->addText(
+        'areaServed',
+        array(
+            'name' => __( "Area Served, two letter country code, comma seperated", 'apc'),
+            'std' => "US, CA, MX"
+        ),
+        true
+    );
 
     $phone_options[] = $options_panel->addText(
         'availableLanguage',
@@ -475,6 +490,7 @@ $options_panel->OpenTab( 'options_6' );
 
 $data = get_option('kg_options');
 
+//assemble the physical postal address
 $addr = array( 
              "@type" => "PostalAddress",
      "streetAddress" => $data['streetAddress'],
@@ -483,58 +499,120 @@ $addr = array(
         "postalCode" => $data['postalCode'],
     "addressCountry" => $country_2to3[$data['addressCountry']]
 );
+/**
+ 
+ Start forming the main data structure.  Other
+ optional parts will be formed and merged later.
+ 
+*/ 
+$data2 = array(
+     "@context" => $data['@context'],
+        "@type" => $data['@type'],
+         'name' => $data['name'], 
+      "address" => $addr,   
+);
 
-$hours = array();
-foreach ( array("Mo","Tu","We","Th","Fr","Sa","Su") as $day ) {
+$data2 = my_array_merge( $data2, "email", $data['email'] );
+$data2 = my_array_merge( $data2, "logo", $data['logo']['src'] );
+$data2 = my_array_merge( $data2, "description", $data['description'] );
+
+//add main phone?
+if ( $data['telephone_show'] ) {
+    $data2 = my_array_merge( $data2, "telephone",  $data['telephone'] );
+}
+// Opening Hours, hours of operation 
+if ( isset( $data['openingHours']['enabled'] ) ) {
+  $hours = array();
+  foreach ( array("Mo","Tu","We","Th","Fr","Sa","Su") as $day ) {
     $day_long = $days[$day];
     $id_1 = strtolower($day_long) . 'Open';
     $id_2 = strtolower($day_long) . 'Close';
     $opening_time = $data['openingHours'][$id_1];
     $closing_time = $data['openingHours'][$id_2];   
-    if ( is_null($opening_time) && is_null($closing_time) )
-       $get_hours = NULL;
-    else
+    if ( empty($opening_time) && empty($closing_time) ) {
+        $get_hours = NULL;
+    } else {
        $get_hours = "$day $opening_time-$closing_time";
-    
-    if ( !is_null($get_hours) )
-      $hours[] = $get_hours;
-}
+    }
+    if ( !is_null($get_hours) ){
+        $hours[] = $get_hours;
+    }
+  } //foreach short day abbrev 
 
-$lang = array ("English","Finnish");
+  $data2 = my_array_merge($data2, "openingHours", $hours);
+}//if opening hours is set
 
-$contact = array(
-            "@type" => "ContactPoint",
-        "telephone" => "+1-256-682-0383",
-      "contactType" => "Sales and Marketing",
-       "areaServed" => "US",
-"availableLanguage" => $lang
-);
 
-$data2 = array(
-     "@context" => $data['@context'],
-        "@type" => $data['@type'],
-         'name' => $data['name'],
-         'logo' => $data['logo']['src'],
-  "description" => $data['description'], 
-      "address" => $addr,
-          "url" => $data['url']   
-);
+// There had better be a "url" => $data['url'], or else, what's the point!
+$data2 = my_array_merge( $data2, "url",  $data['url'] );
+
+// sameAs links pointing to other organizational profiles
 $links = array();
 $alinks = $data["sameAs"];
 foreach( $alinks as $alink ) { 
   $links[]= $alink["li"];
 }
-$data2 = array_merge($data2,array("sameAs"=>$links));
+$data2 = my_array_merge($data2, "sameAs", $links);
 
-//if ( $data['openingHours']['enabled'] == 'on' )
-  $data2 = array_merge($data2,array( "openingHours" => $hours));
+//Points of Contact, e.g.,
+/**
+"contactPoint" : [
+    { "@type" : "ContactPoint",
+      "telephone" : "+1-877-746-0909",
+      "contactType" : "customer service",
+      "contactOption" : "TollFree",
+      "areaServed" : "US"
+    } , {
+      "@type" : "ContactPoint",
+      "telephone" : "+1-505-998-3793",
+      "contactType" : "customer service"
+    } , {
+      "@type" : "ContactPoint",
+      "telephone" : "+1-877-296-1018",
+      "contactType" : "customer service",
+      "contactOption" : ["HearingImpairedSupported","TollFree"] ,
+      "areaServed" : "US"
+    } , {
+      "@type" : "ContactPoint",
+      "telephone" : "+1-877-453-1304",
+      "contactType" : "technical support",
+      "contactOption" : "TollFree",
+      "areaServed" : ["US","CA"],
+      "availableLanguage" : ["English","French"]
+    } , {
+      "@type" : "ContactPoint",
+      "telephone" : "+1-877-453-1304",
+      "contactType" : "bill payment",
+      "contactOption" : "TollFree",
+      "areaServed" : ["US","CA"]
+    } ]
+*/
+$contact_points = $data['ContactPoints'];
+$contact_point = array();
+for ($i=0; $i<count($contact_points); $i++ ) {
+    $contact = array("@type" => "ContactPoint");
+    $contact = array_merge($contact, array("contactType"=>$contact_points[$i]["contactType"] ) );
+    $contact = my_array_merge( $contact, "telephone", $contact_points[$i]["telephone"] );
+    $contact = my_array_merge( $contact, "areaServed", str_getcsv($contact_points[$i]["areaServed"]) );
+    $options = array();
+    if ( isset ($contact_points[$i]["TollFree"] ) ){
+        $options[] = "TollFree";
+    }
+        if ( isset ($contact_points[$i]["HearingImpairedSupported"] ) ){
+        $options[] = "HearingImpairedSupported";
+    }
+    $contact = my_array_merge( $contact, "contactOption", $options );
+    $contact_point = array_merge($contact_point, array($contact));
+}
+
+$data2 = my_array_merge( $data2, "contactPoint", $contact_point );
 
 $json_view_data[] = $options_panel->addParagraph('<pre><code>'.json_format(json_encode( $data )).'</code></pre>',true);
 $options_panel->addCondition(
     'json_data',
   array(
     'name' => __('Show current data in JSON format?', 'apc'),
-    'desc' => __('<small>View current data in JSON format</small>', 'apc'),
+    'desc' => __('<small>Current entered data in JSON format</small>', 'apc'),
     'fields' => $json_view_data,
     'std'  => false
   )
@@ -545,7 +623,7 @@ $options_panel->addCondition(
     'json_data2',
   array(
     'name' => __('Show generated data in JSON format?', 'apc'),
-    'desc' => __('<small>Select, copy, paste below and edit</small>', 'apc'),
+    'desc' => __('<small>Select, copy, paste below and edit as needed.<br/>The opening and closing script tags will be added.</small>', 'apc'),
     'fields' => $json_view_data2,
     'std'  => false
   )
