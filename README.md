@@ -5,6 +5,9 @@ https://developers.google.com/structured-data/customize/overview
 
 uses: [Admin Page Class] (https://github.com/bainternet/Admin-Page-Class)
 
+# Bug Report
+- Noticed that "TollFree" staying on in a ContactPoint (opened an issue).
+
 #Aim 
 have form to create as hand coded this example:
 ```
@@ -49,6 +52,6 @@ have form to create as hand coded this example:
 - [x] Contact info
 - [x] contactPoint(s)/ContactPoint
 - [ ] Lint/Validate
-- [ ] Search
+- [ ] Search, try and be compatiable with [Google Analytics by Yoast] (https://github.com/Yoast/wordpress-seo)
 - [ ] Modify admin-page-class to validate repeater block
 - [ ] Modify admin-page-class so that can delete repeater fields
