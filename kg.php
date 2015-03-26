@@ -514,6 +514,12 @@ $options_panel->CloseTab();
  */
 $options_panel->OpenTab( 'options_5' );
 $options_panel->Title( __( "Sitelinks Search Box", "apc" ) );
+
+$options_panel->addCheckBoxList(
+    'junk',
+    array('op1'=>"Op1",'op2'=>"Op2")
+);
+
 // $options_panel->addCode('code',array('name'=> __('Code Editor ','apc'),'syntax' => 'php', 'desc' => __('code editor field description','apc')));
 $options_panel->addCode( 'target', array(
      'name' => 'Company Custom Search',
@@ -661,7 +667,7 @@ $options_panel->addCode( 'the_script', array(
 //checkbox field
 $options_panel->addCheckbox( 'write_file', array(
      'name' => __( 'Use the above code? ', 'apc' ),
-    'std' => true,
+    'std' => false,
     'desc' => __( 'Check to use the above on this website!', 'apc' ) 
 ) );
 
